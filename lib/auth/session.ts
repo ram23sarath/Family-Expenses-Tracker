@@ -27,10 +27,11 @@ const getMetadataText = (metadata: User["user_metadata"], key: string) => {
 };
 
 const bootstrapProfile = async (supabase: SupabaseClient, user: User): Promise<ProfileRow | null> => {
+  const db = process.env.SUPABASE_SERVICE_ROLE_KEY ? createSupabaseAdminClient() : supabase;
   const fullName = getMetadataText(user.user_metadata, "full_name") ?? user.email?.split("@")[0] ?? "User";
   const householdName = getMetadataText(user.user_metadata, "household_name") ?? `${fullName} Household`;
 
-  const { data: household, error: householdError } = await supabase
+  const { data: household, error: householdError } = await db
     .from("households")
     .insert({ name: householdName, created_by: user.id })
     .select("id")
@@ -38,21 +39,24 @@ const bootstrapProfile = async (supabase: SupabaseClient, user: User): Promise<P
 
   if (householdError || !household?.id) return null;
 
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile, error: profileError } = await db
     .from("users_profile")
-    .insert({
-      id: user.id,
-      household_id: household.id,
-      full_name: fullName,
-      role: "admin",
-      preferred_currency: "INR"
-    })
+    .upsert(
+      {
+        id: user.id,
+        household_id: household.id,
+        full_name: fullName,
+        role: "admin",
+        preferred_currency: "INR"
+      },
+      { onConflict: "id" }
+    )
     .select("household_id, role")
     .single();
 
   if (profileError || !profile?.household_id) return null;
 
-  await supabase.from("expense_categories").insert(
+  await db.from("expense_categories").insert(
     defaultExpenseCategories.map((name) => ({
       household_id: profile.household_id,
       name
