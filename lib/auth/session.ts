@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export interface SessionContext {
@@ -7,24 +8,81 @@ export interface SessionContext {
   role: "admin" | "member" | "viewer";
 }
 
+type ProfileRow = {
+  household_id: string | null;
+  role: string | null;
+};
+
+const defaultExpenseCategories = ["Groceries", "Rent", "Utilities", "Transport", "Salary", "Investments"];
+
+const normalizeRole = (role: string | null): SessionContext["role"] => {
+  if (role === "admin" || role === "member" || role === "viewer") return role;
+  return "member";
+};
+
+const getMetadataText = (metadata: User["user_metadata"], key: string) => {
+  const value = metadata[key];
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+};
+
+const bootstrapProfile = async (supabase: SupabaseClient, user: User): Promise<ProfileRow | null> => {
+  const fullName = getMetadataText(user.user_metadata, "full_name") ?? user.email?.split("@")[0] ?? "User";
+  const householdName = getMetadataText(user.user_metadata, "household_name") ?? `${fullName} Household`;
+
+  const { data: household, error: householdError } = await supabase
+    .from("households")
+    .insert({ name: householdName, created_by: user.id })
+    .select("id")
+    .single();
+
+  if (householdError || !household?.id) return null;
+
+  const { data: profile, error: profileError } = await supabase
+    .from("users_profile")
+    .insert({
+      id: user.id,
+      household_id: household.id,
+      full_name: fullName,
+      role: "admin",
+      preferred_currency: "INR"
+    })
+    .select("household_id, role")
+    .single();
+
+  if (profileError || !profile?.household_id) return null;
+
+  await supabase.from("expense_categories").insert(
+    defaultExpenseCategories.map((name) => ({
+      household_id: profile.household_id,
+      name
+    }))
+  );
+
+  return profile;
+};
+
 export const getSessionContext = async (): Promise<SessionContext> => {
   const supabase = await createSupabaseServerClient();
   const { data: authData } = await supabase.auth.getUser();
 
   if (!authData.user) redirect("/login");
 
-  const { data: profile, error } = await supabase
+  const { data: existingProfile, error } = await supabase
     .from("users_profile")
     .select("household_id, role")
     .eq("id", authData.user.id)
-    .single();
+    .maybeSingle();
 
-  if (error || !profile?.household_id) redirect("/login");
+  if (error) redirect("/login");
+
+  const profile = existingProfile?.household_id ? existingProfile : await bootstrapProfile(supabase, authData.user);
+
+  if (!profile?.household_id) redirect("/login");
 
   return {
     userId: authData.user.id,
     householdId: profile.household_id,
-    role: profile.role
+    role: normalizeRole(profile.role)
   };
 };
 

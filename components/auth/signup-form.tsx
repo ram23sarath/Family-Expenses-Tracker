@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { Card } from "@/components/ui/card";
@@ -10,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 
 export const SignupForm = () => {
-  const router = useRouter();
   const { pushToast } = useToast();
   const [fullName, setFullName] = useState("");
   const [householdName, setHouseholdName] = useState("");
@@ -42,8 +40,11 @@ export const SignupForm = () => {
     if (data.user) {
       pushToast("Signup successful. Verify email if required.", "success");
     }
-    router.push("/dashboard");
-    router.refresh();
+    if (data.session) {
+      window.location.assign("/dashboard");
+      return;
+    }
+    setLoading(false);
   };
 
   return (

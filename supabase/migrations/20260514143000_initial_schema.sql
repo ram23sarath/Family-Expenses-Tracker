@@ -299,6 +299,8 @@ create or replace function public.current_household_id()
 returns uuid
 language sql
 stable
+security definer
+set search_path = public
 as $$
   select household_id from public.users_profile where id = auth.uid()
 $$;
@@ -307,6 +309,8 @@ create or replace function public.is_household_admin()
 returns boolean
 language sql
 stable
+security definer
+set search_path = public
 as $$
   select exists (
     select 1
@@ -343,7 +347,7 @@ for update using (id = public.current_household_id() and public.is_household_adm
 with check (id = public.current_household_id() and public.is_household_admin());
 
 create policy "users profile household read" on public.users_profile
-for select using (household_id = public.current_household_id());
+for select using (id = auth.uid() or household_id = public.current_household_id());
 create policy "users profile self insert" on public.users_profile
 for insert with check (id = auth.uid());
 create policy "users profile update self or admin" on public.users_profile

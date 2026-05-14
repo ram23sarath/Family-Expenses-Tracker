@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { Card } from "@/components/ui/card";
@@ -10,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 
 export const LoginForm = () => {
-  const router = useRouter();
   const { pushToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,8 +25,7 @@ export const LoginForm = () => {
       return;
     }
     pushToast("Signed in successfully", "success");
-    router.push("/dashboard");
-    router.refresh();
+    window.location.assign("/dashboard");
   };
 
   return (
