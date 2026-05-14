@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export interface SessionContext {
@@ -61,11 +62,25 @@ const bootstrapProfile = async (supabase: SupabaseClient, user: User): Promise<P
   return profile;
 };
 
+const getAdminProfile = async (userId: string): Promise<ProfileRow | null> => {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return null;
+
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
+    .from("users_profile")
+    .select("household_id, role")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) return null;
+  return data;
+};
+
 export const getSessionContext = async (): Promise<SessionContext> => {
   const supabase = await createSupabaseServerClient();
   const { data: authData } = await supabase.auth.getUser();
 
-  if (!authData.user) redirect("/login");
+  if (!authData.user) redirect("/login?reason=no-session");
 
   const { data: existingProfile, error } = await supabase
     .from("users_profile")
@@ -73,11 +88,15 @@ export const getSessionContext = async (): Promise<SessionContext> => {
     .eq("id", authData.user.id)
     .maybeSingle();
 
-  if (error) redirect("/login");
+  const adminProfile = error || !existingProfile?.household_id ? await getAdminProfile(authData.user.id) : null;
 
-  const profile = existingProfile?.household_id ? existingProfile : await bootstrapProfile(supabase, authData.user);
+  const profile = existingProfile?.household_id
+    ? existingProfile
+    : adminProfile?.household_id
+      ? adminProfile
+      : await bootstrapProfile(supabase, authData.user);
 
-  if (!profile?.household_id) redirect("/login");
+  if (!profile?.household_id) redirect(`/login?reason=${error ? "profile-error" : "profile-missing"}`);
 
   return {
     userId: authData.user.id,
