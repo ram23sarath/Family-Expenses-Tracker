@@ -1,0 +1,4 @@
+project_id = "family-tracker"
+
+[functions.sync-all]
+verify_jwt = false

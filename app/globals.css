@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  min-height: 100%;
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+* {
+  border-color: #e2e8f0;
+}
+
+.card {
+  @apply rounded-xl bg-white shadow-soft border border-slate-200;
+}

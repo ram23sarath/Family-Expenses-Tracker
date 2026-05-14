@@ -1,0 +1,46 @@
+{
+  "name": "family-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.5.1",
+    "@supabase/supabase-js": "^2.49.8",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "lucide-react": "^0.511.0",
+    "next": "^15.5.18",
+    "papaparse": "^5.5.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.56.4",
+    "recharts": "^2.15.3",
+    "zod": "^3.24.3"
+  },
+  "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.12.1",
+    "@testing-library/jest-dom": "^6.7.0",
+    "@types/node": "^22.15.3",
+    "@types/papaparse": "^5.3.16",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^15.5.18",
+    "postcss": "^8.5.10",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.3"
+  },
+  "overrides": {
+    "postcss": "^8.5.10"
+  }
+}
