@@ -2,6 +2,8 @@
 
 Production-oriented draft for a family finance tracker built with **Next.js App Router + Supabase**.
 
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/ram23sarath/Family-Expenses-Tracker)
+
 ## What this draft includes
 
 - Supabase-authenticated household app with role-aware access
@@ -21,6 +23,19 @@ Production-oriented draft for a family finance tracker built with **Next.js App 
 - Frontend: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Recharts
 - Backend: Supabase Postgres, Supabase Auth, Edge Function (`sync-all`)
 - Deployment target: Netlify
+
+## Netlify Deployment
+
+To deploy this project to Netlify:
+
+1.  Click the **Deploy to Netlify** button above or connect your GitHub repository to Netlify.
+2.  Configure the following environment variables in the Netlify Dashboard (**Site configuration > Environment variables**):
+    - `NEXT_PUBLIC_SUPABASE_URL`
+    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+    - `SUPABASE_SERVICE_ROLE_KEY`
+    - `APP_BASE_URL` (Your Netlify site URL)
+    - `CRON_SYNC_SHARED_SECRET`
+3.  Netlify will automatically detect Next.js and use the `@netlify/plugin-nextjs` for optimal performance.
 
 ## Quick start
 
